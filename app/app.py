@@ -47,6 +47,13 @@ class ChatApp:
                 st.text(", ".join(upload_docs))
             else:
                 st.info("No documents uploaded yet.")
+            
+            # Show processing status
+            if st.session_state.vectordb is None and upload_docs:
+                st.info("⏳ Processing documents... Check progress below.")
+            elif st.session_state.vectordb is not None:
+                st.success("✅ Documents ready! You can chat now.")
+            
             st.subheader("Upload PDF documents")
             pdf_docs = st.file_uploader("Select a PDF document and click on 'Process'", type=['pdf'], accept_multiple_files=True)
             if pdf_docs:
@@ -58,7 +65,15 @@ class ChatApp:
             if len(upload_docs) > st.session_state.previous_upload_docs_length:
                 st.session_state.vectordb = get_vectorstore(upload_docs, from_session_state=True)
                 st.session_state.previous_upload_docs_length = len(upload_docs)
-            st.session_state.chat_history = chat(st.session_state.chat_history, st.session_state.vectordb)
+            # Ensure vectordb is loaded (auto-process if needed)
+            if st.session_state.vectordb is None and upload_docs:
+                with st.spinner("🔄 Processing documents... This may take a few minutes on first run."):
+                    st.session_state.vectordb = get_vectorstore(upload_docs, from_session_state=False)
+            if st.session_state.vectordb is not None:
+                st.session_state.chat_history = chat(st.session_state.chat_history, st.session_state.vectordb)
+            else:
+                # Show status if processing failed
+                st.info("⏳ Waiting for documents to be processed... Check the sidebar for progress.")
 
         # Locks the chat until a document is uploaded
         if not self.docs_files and not st.session_state.uploaded_pdfs:

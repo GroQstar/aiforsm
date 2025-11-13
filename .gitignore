@@ -128,6 +128,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project-specific: Vector database and user documents
+Vector_DB - Documents/
+docs/
+*.pdf
+
 # Spyder project settings
 .spyderproject
 .spyproject
